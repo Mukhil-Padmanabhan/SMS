@@ -27,6 +27,7 @@ export const handler = (event: SQSEvent) => {
             return new Error("Validation failed");
       });
     }
+    return "Queue is empty";
 };
 
 /**
@@ -34,7 +35,7 @@ export const handler = (event: SQSEvent) => {
  * @param message 
  * @param number 
  */
-const sendMessage = (message: string, number: string) => {
+export const sendMessage = (message: string, number: string) => {
 
     // SNS params; Message is required along with either PhoneNumber / TopicArn
     let params : SNSParams = {

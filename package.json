@@ -6,6 +6,7 @@
   "scripts": {
     "test": "jest --coverage",
     "test:watch": "jest --watch",
+    "coverage": "jest --coverage --collectCoverageFrom='./src/**/*.{ts,jxs}'",
     "zipfile:windows": "powershell Compress-Archive ./dist/* ./index",
     "build": "tsc ./src/index.ts --outDir  dist/",
     "remove-zip": "del .\\index.zip",
