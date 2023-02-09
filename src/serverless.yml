@@ -1,0 +1,34 @@
+service: messaging
+
+provider:
+  name: aws
+  runtime: nodejs16.x
+  region: us-east-1
+
+# functions
+functions:
+  sendMessage:
+    handler: src/functions/sendMessage.handler
+    events: # The events that trigger this function
+      - sqs: 
+          arn: messaging/sendMessage
+
+# Serverless plugins
+plugins:
+  - serverless-plugin-typescript
+  - serverless-offline
+
+# Resources your functions use
+resources:
+  Resources:
+    # SNS Topics
+    SNSMessageEvent:
+      Type: AWS::SNS::Topic
+      Properties:
+        DisplayName: NewSMS
+        TopicName: NewMessages
+    SQSMessageEvent:
+      Type: AWS::SQS
+      Properties:
+        DisplayName: NewSMS
+        TopicName: NewMessages

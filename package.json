@@ -1,0 +1,39 @@
+{
+  "name": "sms",
+  "version": "1.0.0",
+  "description": "Sending SMS from API->SNS->SQS->Lambda",
+  "main": "index.js",
+  "scripts": {
+    "test": "jest --coverage",
+    "test:watch": "jest --watch",
+    "zipfile:windows": "powershell Compress-Archive ./dist/* ./index",
+    "build": "tsc ./src/index.ts --outDir  dist/",
+    "remove-zip": "del .\\index.zip",
+    "dev": "ts-node-dev --respawn ./src/index.ts",
+    "start": "ts-node ./src/index.ts"
+  },
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "@aws-cdk/core": "^1.191.0",
+    "aws-sdk": "^2.1310.0",
+    "dotenv": "^16.0.3",
+    "express": "^4.18.2"
+  },
+  "devDependencies": {
+    "@types/aws-lambda": "^8.10.110",
+    "@types/express": "^4.17.17",
+    "@types/jest": "^29.4.0",
+    "@types/node": "^18.13.0",
+    "@types/serverless": "^3.12.10",
+    "jest": "^29.4.2",
+    "serverless": "^3.27.0",
+    "serverless-offline": "^12.0.4",
+    "serverless-plugin-typescript": "^2.1.4",
+    "supertest": "^6.3.3",
+    "ts-jest": "^29.0.5",
+    "ts-node": "^10.9.1",
+    "ts-node-dev": "^2.0.0",
+    "typescript": "^4.9.5"
+  }
+}
