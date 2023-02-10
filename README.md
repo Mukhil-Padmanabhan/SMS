@@ -31,6 +31,13 @@ Once uploaded, we can run the code inside the Lambda function which would genera
 
     npm run remove-zip
 
+## Architecture
+
+In our architecture, we would further have an extension of this wherein we would be sending a message from the Lambda function via SNS to the phone number mentioned in the request body of the API.
+
+![image](https://user-images.githubusercontent.com/23432686/218064808-9c4040bc-9a2b-461c-8894-3f7e9ebadd3c.png)
+
+Source: Digital Ocean
 
 ## Approach
 
