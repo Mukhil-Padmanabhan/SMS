@@ -1,4 +1,4 @@
-import {SQSEvent, SNSMessage } from "aws-lambda"
+import {SQSEvent, SNSMessage, SQSRecord } from "aws-lambda"
 import {SNSParams, MessageParams} from "./interfaces"
 import { isMessageBodyValid, isPhoneNumberValid } from "./commons"
 import {MSG_ATTRIBUTES} from "./constants"
@@ -7,25 +7,30 @@ var SNS = new AWS.SNS({apiVersion: '2010-03-31'})
 
 /**
  * This function is the entry point for the AWS lambda function as defined in its configuration.
- * @param event : SQSEvent :: Event recieved from the SQS Queue
+ * @param event : SQSEvent :: Event recieved from the SQS Queue  
  */
 export const handler = (event: SQSEvent) => {
     if(event?.Records.length) {
-      event.Records
-        .forEach(data => {
-            // Putting essential values into an object for easier resusability
-            let recordParams: MessageParams = {
-                phoneNumber: data?.messageAttributes?.Number?.stringValue || '',
-                message: data.body
-            }
-            if(
-                isMessageBodyValid(recordParams.message) && 
-                isPhoneNumberValid(recordParams.phoneNumber)
-            ) {
-                sendMessage(recordParams.message, recordParams.phoneNumber);
-            }
-            return new Error("Validation failed");
-      });
+        try {
+            event.Records
+            .forEach((data: SQSRecord) => {
+                // Putting essential values into an object for easier resusability
+                let recordParams: MessageParams = {
+                    phoneNumber: data?.messageAttributes?.Number?.stringValue || '',
+                    message: data.body
+                }
+                if(
+                    isMessageBodyValid(recordParams.message) && 
+                    isPhoneNumberValid(recordParams.phoneNumber)
+                ) {
+                    return sendMessage(recordParams.message, recordParams.phoneNumber);
+                }
+                throw {message: "Validation failed"};
+          });
+        } catch(e) {
+            return e
+        }
+      
     }
     return "Queue is empty";
 };
@@ -47,23 +52,23 @@ export const sendMessage = (message: string, number: string) => {
     // Core logic for sending message
     let publishTextPromise: Promise<any> = SNS.publish(params).promise();
 
-    publishTextPromise
+    return publishTextPromise
         .then((data: SNSMessage) => {
-            console.log(JSON.stringify({
+            console.log('__Success_Response__',JSON.stringify({
                  MessageID: data.MessageId, 
                  Message: params.Message, 
                  PhoneNumber: params.PhoneNumber 
             })); // Logging to see it in cloudwatch
-            return JSON.stringify({ 
+            return { 
                 MessageID: data.MessageId, 
                 Message: params.Message, 
                 PhoneNumber: params.PhoneNumber 
-            });
+            };
         }).catch((err: any) => {    
-            console.log(JSON.stringify({ 
+            console.log('__Error_Response__',JSON.stringify({ 
                 Error: err 
             })); // Logging to see it in cloudwatch
-            return JSON.stringify({ Error: err });
+            return new Error('Publish failed');
         });
 }
 

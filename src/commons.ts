@@ -13,7 +13,7 @@ export const isMessageBodyValid = (message: string) => {
    * return true
    */
 
-  return true
+  return Boolean(message)
 }
 
 /**
@@ -29,5 +29,5 @@ export const isPhoneNumberValid = (phoneNumber: string) => {
    * return true
    */
 
-  return true
+  return Boolean(phoneNumber)
 }

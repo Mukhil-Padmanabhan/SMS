@@ -1,57 +1,89 @@
-import 'jest';
-import {SQSEvent, SNSMessage } from "aws-lambda"
-var AWS = require('aws-sdk');
-var SNS = new AWS.SNS({apiVersion: '2010-03-31'})
+import { handler, sendMessage } from '../index';
+import {SQSEvent } from "aws-lambda"
+import * as AWS from 'aws-sdk';
+import * as commons from "../commons"
 
-import * as lambdafunctions from "../index"
-import {eventQueueMock} from '../testHelpers'
-
-
-describe('Unit tests for the Lambda function', () => {
-    let event: SQSEvent;
-    const SNSSpy = jest.spyOn(SNS, "publish")
-  
-    const handlerSpy = jest.spyOn(lambdafunctions, 'handler');
-    const sendMessageSpy = jest.spyOn(lambdafunctions, 'sendMessage');
-
-    it('When the Queue object is empty', () => {
-        handlerSpy.mockImplementationOnce(() => "Queue is empty");
-        lambdafunctions.handler(event);
-        expect(lambdafunctions.handler).toReturnWith("Queue is empty")
-    });
-
-    it('sendMessage should be called with params', () => {
-        let mockResponse = JSON.stringify({ 
-            MessageID: "7ca9322e-71b7-59f7-b6b5-6e70d51fdc00", 
-            Message: "Hello There", 
-            PhoneNumber: "+447XX40XX5XX" 
+jest.mock('aws-sdk', () => {
+  return {
+    SNS: jest.fn().mockImplementation(() => {
+      return {
+        publish: jest.fn().mockImplementation((params) => {
+          if (params.Message === 'fail') {
+            return {
+              promise: jest.fn().mockRejectedValue(new Error('Publish failed'))
+            };
+          }
+          return {
+            promise: jest.fn().mockResolvedValue({ MessageId: '1234' })
+          };
         })
-        sendMessageSpy.mockImplementationOnce(() => mockResponse);
-        lambdafunctions.handler(eventQueueMock);
+      };
+    })
+  };
+});
 
-        expect(lambdafunctions.sendMessage).toBeCalled()
-        expect(lambdafunctions.sendMessage).toReturnWith(mockResponse)
-    });
+jest.spyOn(commons, 'isMessageBodyValid')
+jest.spyOn(commons, 'isPhoneNumberValid')
 
-    it('check for the SNS function call', () => {
-        let mockResponse = JSON.stringify({ 
-            MessageID: "7ca9322e-71b7-59f7-b6b5-6e70d51fdc00", 
-            Message: "Hello There", 
-            PhoneNumber: "+447XX40XX5XX" 
-        })
-      
-        sendMessageSpy.mockImplementationOnce(() => { 
-            SNS.publish({
-                Message: "Hello There", 
-                PhoneNumber: "+447XX40XX5XX" 
-            })
-            return new Promise(() => mockResponse);
-        });
-        lambdafunctions.handler(eventQueueMock);
-        expect(SNSSpy).toHaveBeenCalledWith({
-            Message: "Hello There", 
-            PhoneNumber: "+447XX40XX5XX" 
-        })
+describe('Handler', () => {
+  it('returns "Queue is empty" when no records in event', async () => {
+    const event = { Records: [] };
+    const result = await handler(event);
+    expect(result).toBe('Queue is empty');
+  });
+
+  it('returns "Validation failed" when validation fails', async () => {
+    const event: SQSEvent = {
+      Records: [
+        {
+          messageId: 'ed787f22-bb55-4e57-b1f1-85b5f2b2f7a8',
+          receiptHandle: 'asdarfwefvgrew34534tgwr==',
+          body: 'Hello from API',
+          attributes: {
+            ApproximateReceiveCount: '',
+            SentTimestamp: '',
+            SenderId: '',
+            ApproximateFirstReceiveTimestamp: ''
+          },
+          messageAttributes: {
+            'Phone': {
+              stringValue: '443243234',
+              dataType: 'string'
+            }
+          },
+          md5OfBody: 'e89b3a1695699564a0eaa75e46c1a5af',
+          eventSource: 'aws:sqs',
+          eventSourceARN: 'arn:aws:sqs:us-east-1:305304914309:MessageQueue',
+          awsRegion: 'us-east-1'
+        }
+      ]
+    };
+    const result = await handler(event);
+    expect(commons.isMessageBodyValid).toBeCalled();
+    expect(commons.isMessageBodyValid).toBeTruthy();
+    expect(commons.isPhoneNumberValid).toBeCalled();
+    expect(commons.isPhoneNumberValid).toBeTruthy();
+    expect(result).toEqual({ message: 'Validation failed' });
+  });
+});
+
+describe('sendMessage', () => {
+
+  it('publishes the message and returns the message details', async () => {
+    const message = 'Test message';
+    const number = '1234567890';
+    const result = await sendMessage(message, number);
+    expect(result).toEqual({
+      MessageID: '1234',
+      Message: message,
+      PhoneNumber: number
     });
-})
-    
+  });
+
+  it('returns an error if publishing the message fails', async () => {
+    const message = 'fail';
+    const number = '1234567890';
+    const result = await sendMessage(message, number);
+    expect(result).toEqual(Error('Publish failed'));
+  });
+});

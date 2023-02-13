@@ -1,6 +1,3 @@
-import {SNSMessageAttributes} from "aws-lambda"
-
-
 export interface SNSParams {
     Message: string;
     PhoneNumber?: string;
