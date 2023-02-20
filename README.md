@@ -58,6 +58,9 @@ Source: Digital Ocean
 12. On successful testing, the API was deployed to a dev env and the published API was tested in Postman for the same. The current deployed verison
 
     [https://48acjlxkmh.execute-api.us-east-1.amazonaws.com/Dev](https://48acjlxkmh.execute-api.us-east-1.amazonaws.com/Dev)
+    
+    
+    [ https://72ghf1xime.execute-api.us-west-1.amazonaws.com/Dev]( https://72ghf1xime.execute-api.us-west-1.amazonaws.com/Dev)
 
 **NOTE** :
 An IAM role was created to facilitate the Permissions for all the steps.  Policies with access to SQS, SNS and lambda were attached to the role.
