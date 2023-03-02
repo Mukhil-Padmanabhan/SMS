@@ -4,6 +4,7 @@
 
 Sending SMS from API-> SNS -> SQS -> Lambda
 
+
 ## Run the application
 
 Step 1: Install the required packages by running the following command
